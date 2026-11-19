@@ -85,6 +85,7 @@ import {
 import type { PageStatus } from '@shared/page-status'
 import { createTray } from './tray'
 import { rememberLastPage, startUrl } from './start-page'
+import { watchSignOutLoop } from './sign-out-loop'
 import { moveFocusFrom } from './focus-cycle'
 import {
   applyShortcuts,
@@ -567,6 +568,11 @@ function showMainWindow(): void {
     next.content.webContents.on('render-process-gone', () => setNowPlaying(null))
     // Where the user goes, for "Where you left off" at the next launch.
     rememberLastPage(next.content.webContents)
+    // A sign-in SoundCloud rejects and cannot clear sends its page to /logout forever; this clears
+    // it and opens the start page, signed out (shared/sign-out-loop.ts).
+    watchSignOutLoop(next.content.webContents, () =>
+      startUrl(settings.get('general.startupUrl'))
+    )
     // What the audio engine captures, while a plugin asks it to shape the sound (§21).
     attachAudioEngine({
       content: next.content.webContents,
